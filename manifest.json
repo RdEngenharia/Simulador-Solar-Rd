@@ -1,21 +1,39 @@
-{
-  "name": "Simulador Solar RD",
-  "short_name": "RD Solar",
-  "description": "Simulador de Energia Solar - RD Engenharia Elétrica",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#f2f6fa",
-  "theme_color": "#0a7cff",
-  "icons": [
-    {
-      "src": "logo.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+const CACHE_NAME = 'rd-solar-v2'; // Versão atualizada
+const assets = [
+  './', // Raiz do site
+  'index.html', // Alterado de simulador.html para index.html para coincidir com o seu GitHub
+  'manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'
+];
+
+// Instalação do Service Worker e cache de arquivos
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(assets);
+    })
+  );
+});
+
+// Ativação e limpeza de caches antigos
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      );
+    })
+  );
+  return self.clients.claim();
+});
+
+// Estratégia de busca de arquivos (Cache First)
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
+  );
+});
