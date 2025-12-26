@@ -2,7 +2,7 @@
   "name": "Simulador Solar RD",
   "short_name": "RD Solar",
   "description": "Simulador de Energia Solar - RD Engenharia Elétrica",
-  "start_url": "start_url": "index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f2f6fa",
   "theme_color": "#0a7cff",
