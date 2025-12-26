@@ -1,7 +1,7 @@
 const CACHE_NAME = 'rd-solar-v2'; // Versão atualizada
 const assets = [
   './', // Raiz do site
-  'simulador.html',
+  'index.html', // Alterado de simulador.html para index.html para coincidir com o seu GitHub
   'manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
