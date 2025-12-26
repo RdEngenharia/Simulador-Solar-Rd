@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Configurações PWA Embutidas -->
+  <meta name="theme-color" content="#0a7cff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Link para o Manifesto (Gerado via Blob para evitar arquivo extra) -->
+  <link id="manifest-link" rel="manifest">
+  
+  <title>RD Engenharia | Sistema de Engenharia</title>
+  
+  <!-- Bibliotecas Externas -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  
+  <style>
+    :root {
+      --primary: #0a7cff;
+      --secondary: #25d366;
+      --danger: #e74c3c;
+      --bg: #f2f6fa;
+      --text: #333;
+    }
+    
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+    
+    /* Navegação por Abas */
+    .nav-bar {
+      background: var(--primary);
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .nav-tab {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+      font-size: 14px;
+    }
+
+    .nav-tab.active {
+      background: white;
+      color: var(--primary);
+    }
+
+    .app-section { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+    .app-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Estilos de Componentes */
+    .box { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .logo { text-align: center; margin-bottom: 15px; }
+    .logo img { max-width: 150px; }
+    
+    label { font-size: 13px; color: #666; font-weight: bold; margin-top: 10px; display: block; }
+    input, select, .solar-button { width: 100%; padding: 12px; margin-top: 5px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+    
+    .main-btn { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .btn-pdf { background: var(--danger); color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+    /* Orçamento */
+    .section-box { border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #fafafa; }
+    .grid-flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .grid-flex > div { flex: 1; min-width: 120px; }
+    .btn-add { background: #6c757d; color: white; padding: 10px; font-size: 14px; border: none; cursor: pointer; border-radius: 5px; }
+    .summary-box { background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid var(--primary); margin-top: 20px; }
+    .item-list { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .btn-del { color: var(--danger); cursor: pointer; }
+    .hidden { display: none !important; }
+
+    .btn-float { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--secondary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div class="nav-bar">
+    <button class="nav-tab active" onclick="switchTab('tab-solar', this)">Energia Solar</button>
+    <button class="nav-tab" onclick="switchTab('tab-orcamento', this)">Orçamento Instalação</button>
+  </div>
+
+  <a href="https://wa.me/73991317853" class="btn-float" target="_blank"><i class="fab fa-whatsapp"></i></a>
+
+  <!-- ABA 1: ENERGIA SOLAR -->
+  <div id="tab-solar" class="app-section active">
+    <div class="box">
+      <div class="logo"><img src="logo.png" alt="RD Engenharia" onerror="this.src='https://via.placeholder.com/150x50?text=RD+Engenharia'"></div>
+      <h3 style="text-align: center;">Simulador Fotovoltaico</h3>
+      
+      <label>Nome do Cliente:</label>
+      <input type="text" id="s-nome" placeholder="Digite o nome">
+      
+      <label>Média Mensal (R$):</label>
+      <input type="number" id="s-conta" placeholder="Ex: 450.00">
+      
+      <button class="main-btn solar-button" onclick="simularSolar()">
+        <i class="fas fa-solar-panel"></i> Calcular Economia
+      </button>
+      
+      <div id="s-resultado" style="margin-top: 15px;"></div>
+      <button id="s-btn-pdf" class="btn-pdf" style="display:none; width: 100%; padding: 12px; border-radius: 8px;" onclick="gerarPDFSolar()">
+        <i class="fas fa-file-pdf"></i> Baixar Proposta PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ABA 2: ORÇAMENTO -->
+  <div id="tab-orcamento" class="app-section">
+    <div class="box" style="max-width: 800px;">
+      <h3><i class="fas fa-file-invoice-dollar"></i> Orçamento Técnico</h3>
+      
+      <div class="section-box">
+        <label>Cliente:</label>
+        <input type="text" id="o-cliente" placeholder="Nome do cliente">
+        
+        <div class="grid-flex">
+          <div>
+            <label>Padrão:</label>
+            <select id="o-padrao-fases" onchange="atualizarTensoes()">
+              <option value="1">Monofásico</option>
+              <option value="2">Bifásico</option>
+              <option value="3">Trifásico</option>
+            </select>
+          </div>
+          <div>
+            <label>Tensão (V):</label>
+            <select id="o-tensao">
+              <option value="127">127V</option>
+              <option value="220">220V</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <label>Adicionar Pontos:</label>
+        <div class="grid-flex">
+          <select id="o-tipo-ponto" onchange="togglePontoPot()">
+            <option value="luz" data-preco="25">Ponto de Luz (R$ 25)</option>
+            <option value="tug" data-preco="45">Tomada TUG (R$ 45)</option>
+            <option value="int_simples" data-preco="35">Interruptor Simples (R$ 35)</option>
+            <option value="aterramento" data-preco="200">Haste Aterramento (R$ 200)</option>
+          </select>
+          <input type="number" id="o-ponto-pot" value="100" placeholder="Watts">
+          <input type="number" id="o-ponto-qtd" value="1">
+          <button class="btn-add" onclick="addItemOrc()">Add</button>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <label>Cargas Especiais (TUE):</label>
+        <div class="grid-flex">
+          <select id="o-tue-tipo" onchange="toggleTueCampos()">
+            <option value="chuveiro">Chuveiro Elétrico</option>
+            <option value="ar">Ar Condicionado</option>
+          </select>
+          <div id="o-div-btu" class="hidden">
+            <select id="o-tue-btu">
+              <option value="9000">9.000 BTU</option>
+              <option value="12000">12.000 BTU</option>
+              <option value="18000">18.000 BTU</option>
+            </select>
+          </div>
+          <input type="number" id="o-tue-pot" value="5500" placeholder="Watts">
+          <button class="btn-add" onclick="addTueOrc()">Add TUE</button>
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <div id="o-lista"></div>
+        <div id="o-detalhes-tecnicos" style="font-size: 12px; color: #666; margin-top: 10px;"></div>
+        <h4 id="o-total" style="color: var(--primary); margin-top: 10px;">Total MO: R$ 0,00</h4>
+      </div>
+
+      <button class="main-btn" style="width: 100%; padding: 15px;" onclick="gerarPDFOrcamento()">GERAR ORÇAMENTO PDF</button>
+    </div>
+  </div>
+
+<script>
+  // --- GESTÃO DE PWA DINÂMICA (SUBSTITUI MANIFEST.JSON E SW.JS EXTERNOS) ---
+  const manifest = {
+    "name": "RD Engenharia",
+    "short_name": "RD Solar",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#0a7cff",
+    "icons": [{ "src": "logo.png", "sizes": "512x512", "type": "image/png" }]
+  };
+  const stringManifest = JSON.stringify(manifest);
+  const blob = new Blob([stringManifest], {type: 'application/json'});
+  document.getElementById('manifest-link').setAttribute('href', URL.createObjectURL(blob));
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      // Service worker "inline" embutido via Blob
+      const swContent = `
+        self.addEventListener('fetch', function(event) {});
+      `;
+      const swBlob = new Blob([swContent], {type: 'application/javascript'});
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(err => console.log("SW error", err));
+    });
+  }
+
+  // --- LÓGICA DO SISTEMA ---
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  let dadosS = {};
+  function formatBR(v) { return v.toLocaleString('pt-BR', {minimumFractionDigits: 2}); }
+
+  function simularSolar() {
+    const nome = document.getElementById('s-nome').value;
+    const conta = parseFloat(document.getElementById('s-conta').value);
+    if(!nome || !conta) return;
+
+    const consumoKwh = conta / 1.15;
+    const kits = [{p: 4, v: 7500}, {p: 8, v: 12000}, {p: 14, v: 19000}];
+    let kit = kits.find(k => k.p >= Math.ceil(consumoKwh / 70)) || kits[2];
+    
+    const economiaM = conta * 0.92;
+    const economia25 = economiaM * 12 * 25;
+    dadosS = { nome, kit, economiaM, economia25 };
+
+    document.getElementById('s-resultado').innerHTML = `
+      <div style="background:#f9f9f9; padding:15px; border-radius:8px; border-left:5px solid var(--primary);">
+        <b>Kit:</b> ${kit.p} Painéis | <b>Investimento:</b> R$ ${formatBR(kit.v)}<br>
+        <span style="color:var(--secondary);">Economia Mensal: R$ ${formatBR(economiaM)}</span>
+      </div>
+    `;
+    document.getElementById('s-btn-pdf').style.display = 'block';
+  }
+
+  let itensO = [];
+  function renderOrc() {
+    const lista = document.getElementById('o-lista');
+    lista.innerHTML = '';
+    let total = 0, pot = 0;
+    itensO.forEach(i => {
+      total += i.preco; pot += i.pot;
+      lista.innerHTML += `<div class="item-list">${i.desc} <span>R$ ${formatBR(i.preco)} <i class="fas fa-trash btn-del" onclick="delItem(${i.id})"></i></span></div>`;
+    });
+    document.getElementById('o-total').innerText = `Total MO: R$ ${formatBR(total)}`;
+  }
+
+  function addItemOrc() {
+    const s = document.getElementById('o-tipo-ponto');
+    const opt = s.options[s.selectedIndex];
+    const qtd = parseInt(document.getElementById('o-ponto-qtd').value);
+    itensO.push({ id: Date.now(), desc: `${qtd}x ${opt.text}`, preco: parseFloat(opt.dataset.preco) * qtd, pot: 100 * qtd });
+    renderOrc();
+  }
+
+  function addTueOrc() {
+    const tipo = document.getElementById('o-tue-tipo').value;
+    itensO.push({ id: Date.now(), desc: `TUE: ${tipo}`, preco: 250, pot: 5500 });
+    renderOrc();
+  }
+
+  function delItem(id) { itensO = itensO.filter(i => i.id !== id); renderOrc(); }
+
+  function toggleTueCampos() {
+    document.getElementById('o-div-btu').className = (document.getElementById('o-tue-tipo').value === 'ar') ? '' : 'hidden';
+  }
+
+  function gerarPDFSolar() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text(`Proposta Solar: ${dadosS.nome}`, 10, 20);
+    doc.text(`Economia 25 anos: R$ ${formatBR(dadosS.economia25)}`, 10, 30);
+    doc.save("Proposta_Solar.pdf");
+  }
+
+  function gerarPDFOrcamento() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Orcamento RD Engenharia", 10, 10);
+    doc.autoTable({ head: [['Descricao', 'Valor']], body: itensO.map(i => [i.desc, formatBR(i.preco)]) });
+    doc.save("Orcamento.pdf");
+  }
+</script>
+</body>
+</html>
